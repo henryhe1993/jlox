@@ -1,7 +1,7 @@
 import Token from './token';
 
 export interface Visitor<R> {
-  // R visitAssignExpr(Assign expr);
+  visitAssignExpr(expr: Assign): R;
   visitBinaryExpr(expr: Binary): R;
   visitTernaryExpr(expr: Ternary): R;
   // R visitCallExpr(Call expr);
@@ -13,7 +13,8 @@ export interface Visitor<R> {
   // R visitSuperExpr(Super expr);
   // R visitThisExpr(This expr);
   visitUnaryExpr(expr: Unary): R;
-  // R visitVariableExpr(Variable expr);
+  visitCommaExpr(expr: Comma): R;
+  visitVariableExpr(expr: Variable): R;
 }
 
 export abstract class Expr {
@@ -99,3 +100,44 @@ export class Unary extends Expr {
   }
 }
 
+export class Comma extends Expr {
+  value: Expr;
+  right: Expr;
+
+  constructor(value: Expr, right: Expr) {
+    super();
+    this.value = value;
+    this.right = right;
+  }
+
+
+  accept<R>(visitor: Visitor<R>) {
+    return visitor.visitCommaExpr(this);
+  }
+}
+
+export class Variable extends Expr {
+  name: Token;
+  constructor(name: Token) {
+    super();
+    this.name = name;
+  }
+
+  accept<R>(visitor: Visitor<R>): R {
+    return visitor.visitVariableExpr(this);
+  }
+}
+
+export class Assign extends Expr {
+  name: Token;
+  value: Expr;
+  constructor(name: Token, value: Expr) {
+    super();
+    this.name = name;
+    this.value = value;
+  }
+
+  accept<R>(visitor: Visitor<R>): R {
+    return visitor.visitAssignExpr(this);
+  }
+}

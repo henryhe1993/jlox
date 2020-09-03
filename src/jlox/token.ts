@@ -37,7 +37,7 @@ export default class Token {
     this.loc = loc;
   }
 
-  public toString(): string {
+  toString(): string {
     return this.type + " " + this.lexeme + " " + this.literal;
   }
 }

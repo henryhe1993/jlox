@@ -1,12 +1,12 @@
 import React from 'react';
-import * as Expr from './expr';
-import AstPrinter from './visitors/ast-printer';
-import RPNGenerator from './visitors/rpn-generator';
-import Token, { TokenType } from './token';
-import { Loc } from './interfaces';
-import Scanner from './scanner';
-import Parser from './parser';
-import Interpreter from './visitors/interpreter';
+import * as Expr from '../jlox/expr';
+import AstPrinter from '../jlox/visitors/ast-printer';
+import RPNGenerator from '../jlox/visitors/rpn-generator';
+import Token, { TokenType } from '../jlox/token';
+import { Loc } from '../jlox/interfaces';
+import Scanner from '../jlox/scanner';
+import Parser from '../jlox/parser';
+import Interpreter from '../jlox/visitors/interpreter';
 
 
 const interpreter = new Interpreter();
@@ -19,7 +19,27 @@ export default function() {
   
   const rawInput = React.useMemo(() => {
     return (
-      `1 + 2 + 3 + "AAA" + 4`
+      `
+      var a = "global a";
+      var b = "global b";
+      var c = "global c";
+      {
+        var a = "outer a";
+        var b = "outer b";
+        {
+          var a = "inner a";
+          print a;
+          print b;
+          print c;
+        }
+        print a;
+        print b;
+        print c;
+      }
+      print a;
+      print b;
+      print c;
+      `
     )
   }, []);
 
@@ -27,14 +47,16 @@ export default function() {
     try {
       const scanner = new Scanner(rawInput);
       const tokens = scanner.scanTokens();
-      console.log('tokens:', tokens);
-      const expr = new Parser(tokens).parse();
-      console.log('parsed expr', expr);
-      if (expr) {
-        console.log('astPrinter', new AstPrinter().print(expr));
-        console.log('reverse polish notation', new RPNGenerator().getRPN(expr))
-      }
-      interpreter.interpret(expr)
+      // console.log('tokens:', tokens);
+      const statements = new Parser(tokens).parse();
+      console.log(statements)
+      interpreter.interpret(statements);
+      // console.log('parsed expr', expr);
+      // if (expr) {
+      //   console.log('astPrinter', new AstPrinter().print(expr));
+      //   console.log('reverse polish notation', new RPNGenerator().getRPN(expr))
+      // }
+      // interpreter.interpret(expr)
     } catch(e) {
       console.log(e)
       // const msg: Loc = JSON.parse(e.message);

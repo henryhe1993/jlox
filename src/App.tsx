@@ -1,14 +1,14 @@
 import React from 'react';
 import { BrowserRouter as Router, Route, Redirect, Switch } from 'react-router-dom';
 
-import Jlox from './pages/jlox/jlox';
+import Jlox from './pages/jlox';
 
 function App() {
   return (
     <Router>
       <Switch>
-        <Route path="/jlox" component={Jlox} ></Route>
-        <Redirect to="/jlox" />
+        <Route path="/" component={Jlox} ></Route>
+        <Redirect to="/" />
       </Switch>
     </Router>
   );

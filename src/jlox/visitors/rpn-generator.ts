@@ -25,6 +25,21 @@ export default class RPNVisitor implements Expr.Visitor<string> {
     return this.computeValue(expr.operator.lexeme, expr.right)
   }
 
+  // TODO:
+  visitVariableExpr(expr: Expr.Variable) {
+    return ''
+  }
+
+  // TODO:
+  visitAssignExpr(expr: Expr.Assign) {
+    return ''
+  }
+
+  // TODO:
+  visitCommaExpr(expr: Expr.Comma) {
+    return '';
+  }
+  
   computeValue(value: Expr.LiteralType, ...exprs: Expr.Expr[]) {
     let build = ``;
     for (let expr of exprs) {
