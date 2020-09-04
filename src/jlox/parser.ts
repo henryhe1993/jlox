@@ -178,11 +178,6 @@ export default class Parser {
     let expr = this.expression();
     while (this.match(TokenType.COMMA)) 
       expr = new Expr.Comma(expr, this.comma());
-    return expr;
-  }
-
-  private expression(): Expr.Expr  {
-    let expr = this.assignment();
 
     // right-associative ternary
     while (this.match(TokenType.QUESTION_MARK)) {
@@ -193,9 +188,11 @@ export default class Parser {
       const rightExpr = this.expression();
       expr = new Expr.Ternary(expr, leftExpr, rightExpr);
     }
-    
-
     return expr;
+  }
+
+  private expression(): Expr.Expr  {
+    return this.assignment();
   }
 
   private assignment(): Expr.Expr {

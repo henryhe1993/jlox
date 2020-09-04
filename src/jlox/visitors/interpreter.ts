@@ -222,8 +222,8 @@ export default class Interpreter implements Expr.Visitor<any>, Stmt.Visitor<void
 
   // FIXME:
   visitCommaExpr(expr: Expr.Comma) {
-    this.evaluate(expr.right);
-    return this.evaluate(expr.value);
+    this.evaluate(expr.value)
+    return this.evaluate(expr.right);
   }
 
   visitVariableExpr(expr: Expr.Variable): any {

@@ -20,19 +20,8 @@ export default function() {
   const rawInput = React.useMemo(() => {
     return (
       `
-      fun makeCounter() {
-        var i = 0;
-        fun count() {
-          i = i + 1;
-          print i;
-        }
-      
-        return count;
-      }
-      
-      var counter = makeCounter();
-      counter(); // "1".
-      counter(); // "2".
+      var a = 10;
+      print 1, a = a + 2, a = a - 3, false, true, "123", a;
       `
     )
   }, []);
