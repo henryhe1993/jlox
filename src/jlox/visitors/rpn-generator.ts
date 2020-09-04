@@ -8,6 +8,7 @@ export default class RPNVisitor implements Expr.Visitor<string> {
   visitBinaryExpr(expr: Expr.Binary) {
     return this.computeValue(expr.operator.lexeme, expr.left, expr.right)
   }
+  
   // FIXME:
   visitTernaryExpr(expr: Expr.Ternary) {
     return this.computeValue('?', expr.condition, expr.leftExpr, expr.rightExpr)
@@ -19,6 +20,11 @@ export default class RPNVisitor implements Expr.Visitor<string> {
 
   visitLiteralExpr(expr: Expr.Literal) {
     return this.computeValue(expr.value)
+  }
+
+  // TODO:
+  visitTagExpr(expr: Expr.Tag) {
+    return '';
   }
 
   visitUnaryExpr(expr: Expr.Unary) {
@@ -37,6 +43,11 @@ export default class RPNVisitor implements Expr.Visitor<string> {
 
   // TODO:
   visitCommaExpr(expr: Expr.Comma) {
+    return '';
+  }
+
+  // TODO:
+  visitLogicalExpr(expr: Expr.Logical) {
     return '';
   }
   

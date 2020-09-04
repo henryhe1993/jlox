@@ -1,7 +1,7 @@
 import Token, { TokenType } from './token';
 import Logger from './logger';
 
-const keywords = new Map();
+const keywords = new Map<string, TokenType>();
 keywords.set('and', TokenType.AND);
 keywords.set('class', TokenType.CLASS);
 keywords.set('else', TokenType.ELSE);
@@ -32,7 +32,6 @@ export default class Scanner {
 
   scanTokens() {
     while (!this.isAtEnd()) {
-      // We are at the beginning of the next lexeme.
       this.start = this.current;
       this.scanToken();
     }
@@ -62,7 +61,6 @@ export default class Scanner {
       case '>': this.addToken(this.match('=') ? TokenType.GREATER_EQUAL : TokenType.GREATER); break;
       case '/': {
         if (this.match('/')) {
-          // A comment goes until the end of the line.
           while (this.peek() != '\n' && !this.isAtEnd()) this.advance();
         } else {
           this.addToken(TokenType.SLASH);
@@ -72,7 +70,6 @@ export default class Scanner {
       case ' ':
       case '\r':
       case '\t':
-        // Ignore whitespace.
         break;
 
       case '\n':
@@ -147,7 +144,8 @@ export default class Scanner {
     }
 
     this.advance();
-    this.addToken(TokenType.TAG);
+    const value = this.source.substring(this.start + 1, this.current - 1)
+    this.addToken(TokenType.TAG, value);
   }
 
   private isDigit(c: string) {

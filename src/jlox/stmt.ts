@@ -6,11 +6,11 @@ export interface Visitor<R> {
   // R visitClassStmt(Class stmt);
   visitExpressionStmt(stmt: Expression): R;
   // R visitFunctionStmt(Function stmt);
-  // R visitIfStmt(If stmt);
+  visitIfStmt(stmt: If): R;
   visitPrintStmt(stmt: Print): R;
   // R visitReturnStmt(Return stmt);
   visitVarStmt(stmt: Var): R;
-  // R visitWhileStmt(While stmt);
+  visitWhileStmt(stmt: While): R;
 }
 
 export abstract class Stmt {
@@ -71,5 +71,37 @@ export class Block extends Stmt {
 
   accept<R>(visitor: Visitor<R>): R {
     return visitor.visitBlockStmt(this);
+  }
+}
+
+export class If extends Stmt {
+  condition: Expr.Expr;
+  thenBranch: Stmt;
+  elseBranch: Stmt;
+  
+  constructor(condition: Expr.Expr, thenBranch: Stmt, elseBranch: Stmt) {
+    super();
+    this.condition = condition;
+    this.thenBranch = thenBranch;
+    this.elseBranch = elseBranch;
+  }
+
+  accept<R>(visitor: Visitor<R>): R {
+    return visitor.visitIfStmt(this);
+  }
+}
+
+export class While extends Stmt {
+  condition: Expr.Expr;
+  body: Stmt;
+
+  constructor(condition: Expr.Expr, body: Stmt) {
+    super();
+    this.condition = condition;
+    this.body = body;
+  }
+
+  accept<R>(visitor: Visitor<R>): R {
+    return visitor.visitWhileStmt(this);
   }
 }

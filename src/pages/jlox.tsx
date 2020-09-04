@@ -20,25 +20,19 @@ export default function() {
   const rawInput = React.useMemo(() => {
     return (
       `
-      var a = "global a";
-      var b = "global b";
-      var c = "global c";
-      {
-        var a = "outer a";
-        var b = "outer b";
-        {
-          var a = "inner a";
-          print a;
-          print b;
-          print c;
-        }
-        print a;
-        print b;
-        print c;
+      for (var i = 0; i < 5; i = i + 1) {
+        print "for loop: " + i;
       }
-      print a;
-      print b;
-      print c;
+
+      var a = 0;
+      var b = 1;
+
+      while (a < 100) {
+        print "while loop: " + a;
+        var temp = a;
+        a = b;
+        b = temp + b;
+      }
       `
     )
   }, []);
@@ -105,4 +99,7 @@ export default function() {
     </div>
   )
 }
+
+
+
 

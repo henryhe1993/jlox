@@ -8,7 +8,8 @@ export interface Visitor<R> {
   // R visitGetExpr(Get expr);
   visitGroupingExpr(expr: Grouping): R;
   visitLiteralExpr(expr: Literal): R;
-  // R visitLogicalExpr(Logical expr);
+  visitTagExpr(expr: Tag): R;
+  visitLogicalExpr(expr: Logical) :R;
   // R visitSetExpr(Set expr);
   // R visitSuperExpr(Super expr);
   // R visitThisExpr(This expr);
@@ -84,6 +85,19 @@ export class Literal extends Expr {
   }
 }
 
+export class Tag extends Expr {
+  key: string;
+
+  constructor(key: string) {
+    super();
+    this.key = key;
+  }
+
+  accept<R>(visitor: Visitor<R>) {
+    return visitor.visitTagExpr(this);
+  }
+}
+
 export class Unary extends Expr {
   operator: Token;
   right: Expr;
@@ -140,4 +154,21 @@ export class Assign extends Expr {
   accept<R>(visitor: Visitor<R>): R {
     return visitor.visitAssignExpr(this);
   }
+}
+
+export class Logical extends Expr {
+  left: Expr;
+  operator: Token;
+  right: Expr;
+  constructor(left: Expr, operator: Token, right: Expr) {
+    super();
+    this.left = left;
+    this.operator = operator;
+    this.right = right;
+  }
+
+  accept<R>(visitor: Visitor<R>): R {
+    return visitor.visitLogicalExpr(this);
+  }
+
 }

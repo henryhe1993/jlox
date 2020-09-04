@@ -1,5 +1,5 @@
 import * as Expr from '../expr';
-import { timeStamp } from 'console';
+import TagDataSource from '../tag';
 
 export default class implements Expr.Visitor<string> {
   print(expr: Expr.Expr) {
@@ -24,6 +24,10 @@ export default class implements Expr.Visitor<string> {
     return expr.value.toString();
   }
 
+  visitTagExpr(expr: Expr.Tag) {
+    return TagDataSource[expr.key];
+  }
+
   visitUnaryExpr(expr: Expr.Unary) {
     return this.parenthesize(expr.operator.lexeme, expr.right);
   }
@@ -41,6 +45,11 @@ export default class implements Expr.Visitor<string> {
 
   // TODO:
   visitCommaExpr(expr: Expr.Comma) {
+    return '';
+  }
+
+  // TODO:
+  visitLogicalExpr(expr: Expr.Logical) {
     return '';
   }
 

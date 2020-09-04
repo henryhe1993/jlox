@@ -32,16 +32,80 @@ export default class Parser {
   }
 
   private statement(): Stmt.Stmt {
+    if (this.match(TokenType.FOR)) return this.forStatement();
+    if (this.match(TokenType.IF)) return this.ifStatement();
     if (this.match(TokenType.PRINT)) return this.printStatement();
+    if (this.match(TokenType.WHILE)) return this.whileStatement();
     if (this.match(TokenType.LEFT_BRACE)) return new Stmt.Block(this.block());
 
     return this.expressionStatement();
+  }
+
+  private forStatement(): Stmt.Stmt {
+    this.consume(TokenType.LEFT_PAREN, "Expect '(' after 'for'.");
+
+    let initializer: Stmt.Stmt;
+    if (this.match(TokenType.SEMICOLON)) {
+      initializer = null;
+    } else if (this.match(TokenType.VAR)) {
+      initializer = this.varDeclaration();
+    } else {
+      initializer = this.expressionStatement();
+    }
+    let condition: Expr.Expr = null;
+    if (!this.check(TokenType.SEMICOLON)) {
+      condition = this.expression();
+    }
+    this.consume(TokenType.SEMICOLON, "Expect ';' after loop condition.");
+
+    let increment: Expr.Expr = null;
+    if (!this.check(TokenType.RIGHT_PAREN)) {
+      increment = this.expression();
+    }
+    this.consume(TokenType.RIGHT_PAREN, "Expect ')' after for clauses.");
+    let body = this.statement();
+    
+    if (increment != null) {
+      body = new Stmt.Block([body, new Stmt.Expression(increment)]);
+    }
+
+    if (condition == null) condition = new Expr.Literal(true);
+    body = new Stmt.While(condition, body);
+
+    if (initializer != null) {
+      body = new Stmt.Block([initializer, body]);
+    }
+
+    return body;
+  }
+
+  private ifStatement(): Stmt.Stmt {
+    this.consume(TokenType.LEFT_PAREN, "Expect '(' after 'if'.");
+    const condition = this.expression();
+    this.consume(TokenType.RIGHT_PAREN, "Expect ')' after if condition."); 
+
+    const thenBranch = this.statement();
+    let elseBranch: Stmt.Stmt = null;
+    if (this.match(TokenType.ELSE)) {
+      elseBranch = this.statement();
+    }
+
+    return new Stmt.If(condition, thenBranch, elseBranch);
   }
 
   private printStatement(): Stmt.Stmt {
     const value = this.comma();
     this.consume(TokenType.SEMICOLON, "Expect ';' after value.");
     return new Stmt.Print(value);
+  }
+
+  private whileStatement(): Stmt.Stmt {
+    this.consume(TokenType.LEFT_PAREN, "Expect '(' after 'while'.");
+    const condition = this.expression();
+    this.consume(TokenType.RIGHT_PAREN, "Expect ')' after condition.");
+    const body = this.statement();
+
+    return new Stmt.While(condition, body);
   }
 
   private expressionStatement(): Stmt.Stmt {
@@ -99,7 +163,7 @@ export default class Parser {
   }
 
   private assignment(): Expr.Expr {
-    const expr = this.equality();
+    const expr = this.or();
 
     if (this.match(TokenType.EQUAL)) {
       const equals = this.previous();
@@ -110,6 +174,30 @@ export default class Parser {
       }
 
       this.error(equals, "Invalid assignment target."); 
+    }
+
+    return expr;
+  }
+
+  private or(): Expr.Expr {
+    let expr = this.and();
+
+    while (this.match(TokenType.OR)) {
+      const operator = this.previous();
+      const right = this.and();
+      expr = new Expr.Logical(expr, operator, right);
+    }
+
+    return expr;
+  }
+
+  private and(): Expr.Expr {
+    let expr = this.equality();
+
+    while (this.match(TokenType.AND)) {
+      const operator = this.previous();
+      const right = this.equality();
+      expr = new Expr.Logical(expr, operator, right);
     }
 
     return expr;
@@ -186,7 +274,7 @@ export default class Parser {
       return new Expr.Variable(this.previous());
     }
     if (this.match(TokenType.TAG)) {
-      return new Expr.Literal(this.previous().lexeme);
+      return new Expr.Tag(`${this.previous().literal}`);
     }
 
     if (this.match(TokenType.LEFT_PAREN)) {

@@ -4,6 +4,7 @@ import Token, { TokenType } from '../token';
 import Environment from '../environment';
 import Logger from '../logger';
 import { RuntimeError } from '../error/runtime-error';
+import TagDataSource from '../tag';
 
 export default class Interpreter implements Expr.Visitor<any>, Stmt.Visitor<void> {
   private environment: Environment = new Environment();
@@ -26,10 +27,13 @@ export default class Interpreter implements Expr.Visitor<any>, Stmt.Visitor<void
     }
   }
 
-
-  visitExpressionStmt(stmt: Stmt.Expression): void {
-    this.evaluate(stmt.expression);
-    return null; 
+  visitIfStmt(stmt: Stmt.If) {
+    if (this.isTruthy(this.evaluate(stmt.condition))) {
+      this.execute(stmt.thenBranch);
+    } else if (stmt.elseBranch != null) {
+      this.execute(stmt.elseBranch);
+    }
+    return null;
   }
 
   visitPrintStmt(stmt: Stmt.Print): void {
@@ -48,6 +52,11 @@ export default class Interpreter implements Expr.Visitor<any>, Stmt.Visitor<void
     return null;
   }
 
+  visitExpressionStmt(stmt: Stmt.Expression): void {
+    this.evaluate(stmt.expression);
+    return null; 
+  }
+
   visitAssignExpr(expr: Expr.Assign): any {
     const value = this.evaluate(expr.value);
     this.environment.assign(expr.name, value);
@@ -60,6 +69,10 @@ export default class Interpreter implements Expr.Visitor<any>, Stmt.Visitor<void
 
   visitLiteralExpr(expr: Expr.Literal): any {
     return expr.value;
+  }
+
+  visitTagExpr(expr: Expr.Tag): any {
+    return TagDataSource[expr.key];
   }
 
   visitGroupingExpr(expr: Expr.Grouping): any {
@@ -148,9 +161,28 @@ export default class Interpreter implements Expr.Visitor<any>, Stmt.Visitor<void
     return null;
   }
 
+  visitLogicalExpr(expr: Expr.Logical): any {
+    const left = this.evaluate(expr.left);
+
+    if (expr.operator.type == TokenType.OR) {
+      if (this.isTruthy(left)) return left;
+    } else {
+      if (!this.isTruthy(left)) return left;
+    }
+
+    return this.evaluate(expr.right);
+  }
+
+  visitWhileStmt(stmt: Stmt.While): void {
+    while (this.isTruthy(this.evaluate(stmt.condition))) {
+      this.execute(stmt.body);
+    }
+    return null;
+  }
+
+
   executeBlock(statements: Stmt.Stmt[], environment: Environment) {
     const previous = this.environment;
-    console.log(this.environment, environment)
     try {
       this.environment = environment;
       for (let statement of statements) {
