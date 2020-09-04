@@ -50,6 +50,11 @@ export default class RPNVisitor implements Expr.Visitor<string> {
   visitLogicalExpr(expr: Expr.Logical) {
     return '';
   }
+
+  // TODO:
+  visitCallExpr(expr: Expr.Call) {
+    return '';
+  }
   
   computeValue(value: Expr.LiteralType, ...exprs: Expr.Expr[]) {
     let build = ``;

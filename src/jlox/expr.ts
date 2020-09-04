@@ -5,7 +5,7 @@ export interface Visitor<R> {
   visitUnaryExpr(expr: Unary): R;
   visitBinaryExpr(expr: Binary): R;
   visitTernaryExpr(expr: Ternary): R;
-  // R visitCallExpr(Call expr);
+  visitCallExpr(expr: Call): R;
   // R visitGetExpr(Get expr);
   visitGroupingExpr(expr: Grouping): R;
   visitLiteralExpr(expr: Literal): R;
@@ -171,4 +171,23 @@ export class Logical extends Expr {
     return visitor.visitLogicalExpr(this);
   }
 
+}
+
+export class Call extends Expr {
+  callee: Expr;
+  paren: Token;
+  args: Expr[];
+
+  constructor(callee: Expr, paren: Token, args: Expr[]) {
+    super();
+    this.callee = callee;
+    this.paren = paren;
+    this.args = args;
+  }
+
+  accept<R> (visitor: Visitor<R>): R {
+    return visitor.visitCallExpr(this);
+  }
+
+ 
 }

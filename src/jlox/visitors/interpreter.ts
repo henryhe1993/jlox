@@ -3,15 +3,30 @@ import * as Stmt from '../stmt';
 import Token, { TokenType } from '../token';
 import Environment from '../environment';
 import Logger from '../logger';
-import { RuntimeError } from '../error/runtime-error';
+import { RuntimeError, Return } from '../error/runtime-error';
 import TagDataSource from '../tag';
+import LoxCallable from '../lox-callable';
+import LoxFunction from '../lox-function';
 
 enum ExitState {
   BREAK = 'BREAK'
 }
 
 export default class Interpreter implements Expr.Visitor<any>, Stmt.Visitor<void> {
-  private environment: Environment = new Environment();
+  globals: Environment = new Environment();
+  private environment: Environment = this.globals;
+
+  constructor() {
+    this.globals.define("clock", new class extends LoxCallable {
+      arity(): number { return 0; }
+
+      call(interpreter: Interpreter, args: any[]): number {
+        return Date.now();
+      }
+
+      toString(): String { return "<native fn>"; }
+    });
+  }
 
   interpret(statements: Stmt.Stmt[]) {
     try {
@@ -69,6 +84,20 @@ export default class Interpreter implements Expr.Visitor<any>, Stmt.Visitor<void
   visitBreakStmt(stmt: Stmt.Stmt): ExitState.BREAK {
     return ExitState.BREAK;
   }
+
+  visitFunctionStmt(stmt: Stmt.Function): void {
+    const fun = new LoxFunction(stmt, this.environment);
+    this.environment.define(stmt.name.lexeme, fun);
+    return null;
+  }
+
+  visitReturnStmt(stmt: Stmt.Return) {
+    let value = null;
+    if (stmt.value != null) value = this.evaluate(stmt.value);
+    
+    throw new Return(value);
+  }
+
 
   // EXPRESSION
   visitAssignExpr(expr: Expr.Assign): any {
@@ -146,6 +175,25 @@ export default class Interpreter implements Expr.Visitor<any>, Stmt.Visitor<void
   // FIXME:
   visitTernaryExpr(expr: Expr.Ternary): any {
     return this.evaluate(expr.condition) ? this.evaluate(expr.leftExpr) : this.evaluate(expr.rightExpr);
+  }
+
+  visitCallExpr(expr: Expr.Call): any {
+    const callee = this.evaluate(expr.callee);
+
+    const args: Expr.Expr[] = [];
+    for (let arg of expr.args) { 
+      args.push(this.evaluate(arg));
+    }
+    if (!(callee instanceof LoxCallable)) {
+      throw new RuntimeError(expr.paren, "Can only call functions and classes.");
+    }
+    const fun: LoxCallable = callee;
+    if (args.length !== fun.arity()) {
+      throw new RuntimeError(expr.paren, "Expected " +
+          fun.arity() + " arguments but got " +
+          args.length + ".");
+    }
+    return fun.call(this, args);
   }
 
   visitGroupingExpr(expr: Expr.Grouping): any {

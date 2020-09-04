@@ -5,10 +5,10 @@ export interface Visitor<R> {
   visitBlockStmt(stmt: Block): R;
   // R visitClassStmt(Class stmt);
   visitExpressionStmt(stmt: Expression): R;
-  // R visitFunctionStmt(Function stmt);
+  visitFunctionStmt(stmt: Function): R;
   visitIfStmt(stmt: If): R;
   visitPrintStmt(stmt: Print): R;
-  // R visitReturnStmt(Return stmt);
+  visitReturnStmt(stmt: Return): R;
   visitVarStmt(stmt: Var): R;
   visitWhileStmt(stmt: While): R;
   visitBreakStmt(stmt: Break): R;
@@ -110,4 +110,38 @@ export class Break extends Stmt {
   accept<R>(visitor: Visitor<R>): R {
     return visitor.visitBreakStmt(this);
   }
+}
+
+export class Function extends Stmt {
+  name: Token;
+  params: Token[];
+  body: Stmt[];
+
+  constructor(name: Token, params: Token[], body: Stmt[]) {
+    super();
+    this.name = name;
+    this.params = params;
+    this.body = body;
+  }
+
+  accept<R>(visitor: Visitor<R>): R{
+    return visitor.visitFunctionStmt(this);
+  }
+}
+
+export class Return extends Stmt {
+  keyword: Token;
+  value: Expr.Expr;
+
+  constructor(keyword: Token, value: Expr.Expr) {
+    super();
+    this.keyword = keyword;
+    this.value = value;
+  }
+
+  accept<R>(visitor: Visitor<R>): R {
+    return visitor.visitReturnStmt(this);
+  }
+
+
 }

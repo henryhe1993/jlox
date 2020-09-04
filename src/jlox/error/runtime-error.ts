@@ -8,3 +8,12 @@ export class RuntimeError extends Error {
     this.token = token;
   }
 }
+
+export class Return extends RuntimeError {
+  value: any;
+
+  constructor(value: any) {
+    super(null, null);
+    this.value = value;
+  }
+}
