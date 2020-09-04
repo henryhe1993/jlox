@@ -16,7 +16,7 @@ export enum TokenType {
 
   // Keywords.
   AND = 'AND', CLASS = 'CLASS', ELSE = 'ELSE', FALSE = 'FALSE', FUN = 'FUN', FOR = 'FOR', IF = 'IF', NIL = 'NIL', OR = 'OR',
-  PRINT = 'PRINT', RETURN = 'RETURN', SUPER = 'SUPER', THIS = 'THIS', TRUE = 'TRUE', VAR = 'VAR', WHILE = 'WHILE',
+  PRINT = 'PRINT', RETURN = 'RETURN', SUPER = 'SUPER', THIS = 'THIS', TRUE = 'TRUE', VAR = 'VAR', WHILE = 'WHILE', BREAK = 'BREAK',
 
   // Tag.
   TAG = 'TAG',

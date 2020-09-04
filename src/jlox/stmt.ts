@@ -11,6 +11,7 @@ export interface Visitor<R> {
   // R visitReturnStmt(Return stmt);
   visitVarStmt(stmt: Var): R;
   visitWhileStmt(stmt: While): R;
+  visitBreakStmt(stmt: Break): R;
 }
 
 export abstract class Stmt {
@@ -44,8 +45,6 @@ export class Var extends Stmt {
   accept<R>(visitor: Visitor<R>): R {
     return visitor.visitVarStmt(this);
   }
-
-  
 }
 
 export class Print extends Stmt {
@@ -103,5 +102,12 @@ export class While extends Stmt {
 
   accept<R>(visitor: Visitor<R>): R {
     return visitor.visitWhileStmt(this);
+  }
+}
+
+export class Break extends Stmt {
+
+  accept<R>(visitor: Visitor<R>): R {
+    return visitor.visitBreakStmt(this);
   }
 }

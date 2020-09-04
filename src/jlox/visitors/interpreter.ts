@@ -6,18 +6,14 @@ import Logger from '../logger';
 import { RuntimeError } from '../error/runtime-error';
 import TagDataSource from '../tag';
 
+enum ExitState {
+  BREAK = 'BREAK'
+}
+
 export default class Interpreter implements Expr.Visitor<any>, Stmt.Visitor<void> {
   private environment: Environment = new Environment();
 
   interpret(statements: Stmt.Stmt[]) {
-    // try {
-    //   console.log('evaluting expression', expression)
-    //   const value = this.evaluate(expression);
-    //   console.log('interpreted value', this.stringify(value));
-    // } catch (error) {
-    //   // Logger.errorMsg(error);
-    // }
-
     try {
       for (let statement of statements) {
         this.execute(statement);
@@ -27,11 +23,21 @@ export default class Interpreter implements Expr.Visitor<any>, Stmt.Visitor<void
     }
   }
 
+  // STATEMENT
+  visitBlockStmt(stmt: Stmt.Block): void | ExitState {
+    return this.executeBlock(stmt.statements, new Environment(this.environment));
+  }
+
+  visitExpressionStmt(stmt: Stmt.Expression): void {
+    this.evaluate(stmt.expression);
+    return null; 
+  }
+
   visitIfStmt(stmt: Stmt.If) {
     if (this.isTruthy(this.evaluate(stmt.condition))) {
-      this.execute(stmt.thenBranch);
+      return this.execute(stmt.thenBranch);
     } else if (stmt.elseBranch != null) {
-      this.execute(stmt.elseBranch);
+      return this.execute(stmt.elseBranch);
     }
     return null;
   }
@@ -52,31 +58,23 @@ export default class Interpreter implements Expr.Visitor<any>, Stmt.Visitor<void
     return null;
   }
 
-  visitExpressionStmt(stmt: Stmt.Expression): void {
-    this.evaluate(stmt.expression);
-    return null; 
+  visitWhileStmt(stmt: Stmt.While): void {
+    while (this.isTruthy(this.evaluate(stmt.condition))) {
+      const execution = this.execute(stmt.body);
+      if (execution === ExitState.BREAK) break;
+    }
+    return null;
   }
 
+  visitBreakStmt(stmt: Stmt.Stmt): ExitState.BREAK {
+    return ExitState.BREAK;
+  }
+
+  // EXPRESSION
   visitAssignExpr(expr: Expr.Assign): any {
     const value = this.evaluate(expr.value);
     this.environment.assign(expr.name, value);
     return value;
-  }
-
-  visitVariableExpr(expr: Expr.Variable): any {
-    return this.environment.get(expr.name);
-  }
-
-  visitLiteralExpr(expr: Expr.Literal): any {
-    return expr.value;
-  }
-
-  visitTagExpr(expr: Expr.Tag): any {
-    return TagDataSource[expr.key];
-  }
-
-  visitGroupingExpr(expr: Expr.Grouping): any {
-    return this.evaluate(expr.expression);
   }
 
   visitUnaryExpr(expr: Expr.Unary): any {
@@ -150,15 +148,16 @@ export default class Interpreter implements Expr.Visitor<any>, Stmt.Visitor<void
     return this.evaluate(expr.condition) ? this.evaluate(expr.leftExpr) : this.evaluate(expr.rightExpr);
   }
 
-  // FIXME:
-  visitCommaExpr(expr: Expr.Comma) {
-    this.evaluate(expr.right);
-    return this.evaluate(expr.value);
+  visitGroupingExpr(expr: Expr.Grouping): any {
+    return this.evaluate(expr.expression);
   }
 
-  visitBlockStmt(stmt: Stmt.Block): void {
-    this.executeBlock(stmt.statements, new Environment(this.environment));
-    return null;
+  visitLiteralExpr(expr: Expr.Literal): any {
+    return expr.value;
+  }
+
+  visitTagExpr(expr: Expr.Tag): any {
+    return TagDataSource[expr.key];
   }
 
   visitLogicalExpr(expr: Expr.Logical): any {
@@ -173,35 +172,40 @@ export default class Interpreter implements Expr.Visitor<any>, Stmt.Visitor<void
     return this.evaluate(expr.right);
   }
 
-  visitWhileStmt(stmt: Stmt.While): void {
-    while (this.isTruthy(this.evaluate(stmt.condition))) {
-      this.execute(stmt.body);
-    }
-    return null;
+  // FIXME:
+  visitCommaExpr(expr: Expr.Comma) {
+    this.evaluate(expr.right);
+    return this.evaluate(expr.value);
   }
 
+  visitVariableExpr(expr: Expr.Variable): any {
+    return this.environment.get(expr.name);
+  }
 
-  executeBlock(statements: Stmt.Stmt[], environment: Environment) {
+  executeBlock(statements: Stmt.Stmt[], environment: Environment): void | ExitState {
     const previous = this.environment;
+    let result: void | ExitState = null;
     try {
       this.environment = environment;
       for (let statement of statements) {
-        this.execute(statement);
+        result = this.execute(statement);
+        if (result === ExitState.BREAK) {
+          return result;
+        }
       }
+      return null;
     } finally {
       this.environment = previous;
     }
   }
 
+  private execute(stmt: Stmt.Stmt): void | ExitState {
+    return stmt.accept(this);
+  }
 
   private evaluate(expr: Expr.Expr): any {
     return expr.accept(this);
   }
-
-  private execute(stmt: Stmt.Stmt): void {
-    stmt.accept(this);
-  }
-  
 
   private isTruthy(object: Object): boolean {
     return !!object;
@@ -220,6 +224,4 @@ export default class Interpreter implements Expr.Visitor<any>, Stmt.Visitor<void
     if (object == null) return "nil";
     return object.toString();
   }
-
-  
 }

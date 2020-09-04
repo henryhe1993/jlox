@@ -20,19 +20,23 @@ export default function() {
   const rawInput = React.useMemo(() => {
     return (
       `
-      for (var i = 0; i < 5; i = i + 1) {
-        print "for loop: " + i;
+      var i = 0;
+      while (i < 4) {
+        var j = 0;
+        while (j < 4) {
+          print "for loop: i: " + i + ", j: " + j;
+          {
+            
+            if (j > 1)
+              break;
+            j = j + 1;
+          }
+        }
+        i = i + 1;
+        if (i > 2)
+          break;
       }
-
-      var a = 0;
-      var b = 1;
-
-      while (a < 100) {
-        print "while loop: " + a;
-        var temp = a;
-        a = b;
-        b = temp + b;
-      }
+      print "finish";
       `
     )
   }, []);

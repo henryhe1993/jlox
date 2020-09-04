@@ -18,6 +18,7 @@ keywords.set('this', TokenType.THIS);
 keywords.set('true', TokenType.TRUE);
 keywords.set('var', TokenType.VAR);
 keywords.set('while', TokenType.WHILE);
+keywords.set('break', TokenType.BREAK);
 
 export default class Scanner {
   private source: string;

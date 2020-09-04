@@ -16,7 +16,6 @@ export default class Parser {
     while (!this.isAtEnd()) {
       statements.push(this.declaration());
     }
-
     return statements; 
   }
 
@@ -31,12 +30,25 @@ export default class Parser {
     }
   }
 
+  private varDeclaration(): Stmt.Stmt {
+    const name = this.consume(TokenType.IDENTIFIER, "Expect variable name.");
+
+    let initializer: Expr.Expr = null;
+    if (this.match(TokenType.EQUAL)) {
+      initializer = this.expression();
+    }
+
+    this.consume(TokenType.SEMICOLON, "Expect ';' after variable declaration.");
+    return new Stmt.Var(name, initializer);
+  }
+
   private statement(): Stmt.Stmt {
     if (this.match(TokenType.FOR)) return this.forStatement();
     if (this.match(TokenType.IF)) return this.ifStatement();
     if (this.match(TokenType.PRINT)) return this.printStatement();
     if (this.match(TokenType.WHILE)) return this.whileStatement();
-    if (this.match(TokenType.LEFT_BRACE)) return new Stmt.Block(this.block());
+    if (this.match(TokenType.BREAK)) return this.breakStatement();
+    if (this.match(TokenType.LEFT_BRACE)) return new Stmt.Block(this.blockStatement());
 
     return this.expressionStatement();
   }
@@ -108,15 +120,13 @@ export default class Parser {
     return new Stmt.While(condition, body);
   }
 
-  private expressionStatement(): Stmt.Stmt {
-    const expr = this.comma();
-    this.consume(TokenType.SEMICOLON, "Expect ';' after expression.");
-    return new Stmt.Expression(expr);
+  private breakStatement(): Stmt.Stmt {
+    this.consume(TokenType.SEMICOLON, "Expect ';' after value.");
+    return new Stmt.Break();
   }
 
-  private block(): Stmt.Stmt[] {
+  private blockStatement(): Stmt.Stmt[] {
     const statements: Stmt.Stmt[] = [];
-
     while (!this.check(TokenType.RIGHT_BRACE) && !this.isAtEnd()) {
       statements.push(this.declaration());
     }
@@ -125,18 +135,11 @@ export default class Parser {
     return statements;
   }
 
-  private varDeclaration(): Stmt.Stmt {
-    const name = this.consume(TokenType.IDENTIFIER, "Expect variable name.");
-
-    let initializer: Expr.Expr = null;
-    if (this.match(TokenType.EQUAL)) {
-      initializer = this.expression();
-    }
-
-    this.consume(TokenType.SEMICOLON, "Expect ';' after variable declaration.");
-    return new Stmt.Var(name, initializer);
+  private expressionStatement(): Stmt.Stmt {
+    const expr = this.comma();
+    this.consume(TokenType.SEMICOLON, "Expect ';' after expression.");
+    return new Stmt.Expression(expr);
   }
-
 
   private comma(): Expr.Expr {
     let expr = this.expression();

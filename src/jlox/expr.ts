@@ -2,6 +2,7 @@ import Token from './token';
 
 export interface Visitor<R> {
   visitAssignExpr(expr: Assign): R;
+  visitUnaryExpr(expr: Unary): R;
   visitBinaryExpr(expr: Binary): R;
   visitTernaryExpr(expr: Ternary): R;
   // R visitCallExpr(Call expr);
@@ -13,7 +14,6 @@ export interface Visitor<R> {
   // R visitSetExpr(Set expr);
   // R visitSuperExpr(Super expr);
   // R visitThisExpr(This expr);
-  visitUnaryExpr(expr: Unary): R;
   visitCommaExpr(expr: Comma): R;
   visitVariableExpr(expr: Variable): R;
 }
