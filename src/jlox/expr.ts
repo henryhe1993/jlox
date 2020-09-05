@@ -1,4 +1,5 @@
 import Token from './token';
+import * as Stmt from './stmt';
 
 export interface Visitor<R> {
   visitAssignExpr(expr: Assign): R;
@@ -6,6 +7,7 @@ export interface Visitor<R> {
   visitBinaryExpr(expr: Binary): R;
   visitTernaryExpr(expr: Ternary): R;
   visitCallExpr(expr: Call): R;
+  visitFunctionExpr(expr: Function): R;
   // R visitGetExpr(Get expr);
   visitGroupingExpr(expr: Grouping): R;
   visitLiteralExpr(expr: Literal): R;
@@ -188,6 +190,21 @@ export class Call extends Expr {
   accept<R> (visitor: Visitor<R>): R {
     return visitor.visitCallExpr(this);
   }
+}
 
- 
+export class Function extends Expr {
+  name: string;
+  params: Token[];
+  body: Stmt.Stmt[];
+
+  constructor(name: string, params: Token[], body: Stmt.Stmt[]) {
+    super();
+    this.name = name;
+    this.params = params;
+    this.body = body;
+  }
+
+  accept<R> (visitor: Visitor<R>): R {
+    return visitor.visitFunctionExpr(this);
+  }
 }

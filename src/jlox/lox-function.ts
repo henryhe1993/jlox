@@ -36,6 +36,6 @@ export default class LoxFunction extends LoxCallable {
   }
 
   toString(): string {
-    return "<fn " + this.declaration.name.lexeme + ">";
+    return "<fn " + (this.declaration.name.lexeme || 'Anonymous') + ">";
   }
 }

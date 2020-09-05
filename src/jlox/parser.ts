@@ -38,7 +38,6 @@ export default class Parser {
     if (this.match(TokenType.EQUAL)) {
       initializer = this.expression();
     }
-
     this.consume(TokenType.SEMICOLON, "Expect ';' after variable declaration.");
     return new Stmt.Var(name, initializer);
   }
@@ -334,6 +333,29 @@ export default class Parser {
     }
     if (this.match(TokenType.IDENTIFIER)) {
       return new Expr.Variable(this.previous());
+    }
+    if (this.match(TokenType.FUN)) {
+      let name = '';
+      if (this.match(TokenType.IDENTIFIER)) {
+        name = this.previous().lexeme;
+      }
+      this.consume(TokenType.LEFT_PAREN, "Expect '(' after function name.");
+      const parameters: Token[] = [];
+      if (!this.check(TokenType.RIGHT_PAREN)) {
+        do {
+          if (parameters.length >= 255) {
+            this.error(this.peek(), "Cannot have more than 255 parameters.");
+          }
+  
+          parameters.push(this.consume(TokenType.IDENTIFIER, "Expect parameter name."));
+        } while (this.match(TokenType.COMMA));
+      }
+      this.consume(TokenType.RIGHT_PAREN, "Expect ')' after parameters.");
+  
+      this.consume(TokenType.LEFT_BRACE, "Expect '{' before function body.");
+      const body = this.blockStatement();
+
+      return new Expr.Function(name, parameters, body);
     }
     if (this.match(TokenType.TAG)) {
       return new Expr.Tag(`${this.previous().literal}`);

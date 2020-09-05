@@ -20,8 +20,21 @@ export default function() {
   const rawInput = React.useMemo(() => {
     return (
       `
-      var a = 10;
-      print 1, a = a + 2, a = a - 3, false, true, "123", a;
+      // var a = fun() {
+      //   print 1;
+      // };
+      // a();
+
+      fun thrice(fn) {
+        print fn;
+        for (var i = 1; i <= 3; i = i + 1) {
+          fn(i);
+        }
+      }
+      
+      thrice(fun aa(a) {
+        print a;
+      });
       `
     )
   }, []);

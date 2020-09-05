@@ -230,6 +230,14 @@ export default class Interpreter implements Expr.Visitor<any>, Stmt.Visitor<void
     return this.environment.get(expr.name);
   }
 
+  visitFunctionExpr(expr: Expr.Function): LoxFunction {
+    const fun = new LoxFunction(
+      new Stmt.Function(new Token(TokenType.FUN, expr.name, null, null), expr.params, expr.body), this.environment
+    );
+    // this.environment.define(stmt.name.lexeme, fun);
+    return fun;
+  }
+
   executeBlock(statements: Stmt.Stmt[], environment: Environment): void | ExitState {
     const previous = this.environment;
     let result: void | ExitState = null;
