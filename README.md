@@ -9,6 +9,7 @@ Additional Operators & Statements:
 1. Support right associative ternary operator
 2. Support comma operator
 3. Support break statement
+4. Support anonymous function expression
 
 Differences:
 1. Slightly different error handling

@@ -7,6 +7,7 @@ import { Loc } from '../jlox/interfaces';
 import Scanner from '../jlox/scanner';
 import Parser from '../jlox/parser';
 import Interpreter from '../jlox/visitors/interpreter';
+import Resolver from '../jlox/resolver';
 
 
 const interpreter = new Interpreter();
@@ -20,21 +21,16 @@ export default function() {
   const rawInput = React.useMemo(() => {
     return (
       `
-      // var a = fun() {
-      //   print 1;
-      // };
-      // a();
-
-      fun thrice(fn) {
-        print fn;
-        for (var i = 1; i <= 3; i = i + 1) {
-          fn(i);
+      var a = "global";
+      {
+        fun showA() {
+          print a;
         }
+
+        showA();
+        var a = "block";
+        showA();
       }
-      
-      thrice(fun aa(a) {
-        print a;
-      });
       `
     )
   }, []);
@@ -45,7 +41,8 @@ export default function() {
       const tokens = scanner.scanTokens();
       // console.log('tokens:', tokens);
       const statements = new Parser(tokens).parse();
-      console.log(statements)
+      const resolver = new Resolver(interpreter);
+      resolver.resolve(statements);
       interpreter.interpret(statements);
       // console.log('parsed expr', expr);
       // if (expr) {

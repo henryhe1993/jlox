@@ -15,6 +15,7 @@ enum ExitState {
 export default class Interpreter implements Expr.Visitor<any>, Stmt.Visitor<void> {
   globals: Environment = new Environment();
   private environment: Environment = this.globals;
+  private locals: Map<Expr.Expr, number> = new Map<Expr.Expr, number>();
 
   constructor() {
     this.globals.define("clock", new class extends LoxCallable {
@@ -26,6 +27,10 @@ export default class Interpreter implements Expr.Visitor<any>, Stmt.Visitor<void
 
       toString(): String { return "<native fn>"; }
     });
+  }
+
+  resolve(expr: Expr.Expr, depth: number): void {
+    this.locals.set(expr, depth);
   }
 
   interpret(statements: Stmt.Stmt[]) {
@@ -102,7 +107,12 @@ export default class Interpreter implements Expr.Visitor<any>, Stmt.Visitor<void
   // EXPRESSION
   visitAssignExpr(expr: Expr.Assign): any {
     const value = this.evaluate(expr.value);
-    this.environment.assign(expr.name, value);
+    const distance = this.locals.get(expr);
+    if (distance != null) {
+      this.environment.assignAt(distance, expr.name, value);
+    } else {
+      this.globals.assign(expr.name, value);
+    }
     return value;
   }
 
@@ -227,15 +237,18 @@ export default class Interpreter implements Expr.Visitor<any>, Stmt.Visitor<void
   }
 
   visitVariableExpr(expr: Expr.Variable): any {
-    return this.environment.get(expr.name);
+    return this.lookUpVariable(expr.name, expr);
   }
 
   visitFunctionExpr(expr: Expr.Function): LoxFunction {
-    const fun = new LoxFunction(
-      new Stmt.Function(new Token(TokenType.FUN, expr.name, null, null), expr.params, expr.body), this.environment
+    return new LoxFunction(
+      new Stmt.Function(
+        new Token(TokenType.FUN, expr.name, null, null), 
+        expr.params, 
+        expr.body
+      ), 
+      this.environment
     );
-    // this.environment.define(stmt.name.lexeme, fun);
-    return fun;
   }
 
   executeBlock(statements: Stmt.Stmt[], environment: Environment): void | ExitState {
@@ -279,5 +292,14 @@ export default class Interpreter implements Expr.Visitor<any>, Stmt.Visitor<void
   private stringify(object: any): string {
     if (object == null) return "nil";
     return object.toString();
+  }
+
+  private lookUpVariable(name: Token, expr: Expr.Expr): any {
+    const distance = this.locals.get(expr);
+    if (distance != null) {
+      return this.environment.getAt(distance, name.lexeme);
+    } else {
+      return this.globals.get(name);
+    }
   }
 }
