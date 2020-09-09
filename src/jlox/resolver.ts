@@ -7,13 +7,20 @@ import Token from './token';
 enum FunctionType {
   NONE,
   FUNCTION,
+  INITIALIZER,
   METHOD
+}
+
+enum ClassType {
+  NONE,
+  CLASS
 }
 
 export default class Resolver implements Expr.Visitor<void>, Stmt.Visitor<void> {
   private interpreter: Interpreter;
   private scopes: Map<string, boolean>[] = [];
   private currentFunction: FunctionType = FunctionType.NONE;
+  private currentClass: ClassType = ClassType.NONE;
   // Stack<Map<String, Boolean>>
 
   constructor(interpreter: Interpreter) {
@@ -29,14 +36,24 @@ export default class Resolver implements Expr.Visitor<void>, Stmt.Visitor<void> 
   }
 
   visitClassStmt(stmt: Stmt.Class): void {
+    const enclosingClass = this.currentClass;
+    this.currentClass = ClassType.CLASS;
+
     this.declare(stmt.name);
     this.define(stmt.name);
 
+    this.beginScope();
+    this.scopes[this.scopes.length - 1].set("this", true);
+
     for (let method of stmt.methods) {
-    const declaration = FunctionType.METHOD;
+      let declaration = FunctionType.METHOD;
+      if (method.name.lexeme === "init") {
+        declaration = FunctionType.INITIALIZER;
+      }
       this.resolveFunction(method, declaration); 
     }
-
+    this.endScope();
+    this.currentClass = enclosingClass;
     return null;
   }
 
@@ -89,6 +106,10 @@ export default class Resolver implements Expr.Visitor<void>, Stmt.Visitor<void> 
       Logger.errorMsg(stmt.keyword, "Cannot return from top-level code.");
     }
     if (stmt.value != null) {
+      if (this.currentFunction == FunctionType.INITIALIZER) {
+        Logger.errorMsg(stmt.keyword,
+            "Cannot return a value from an initializer.");
+      }
       this.resolveExpr(stmt.value);
     }
     return null;
@@ -153,6 +174,17 @@ export default class Resolver implements Expr.Visitor<void>, Stmt.Visitor<void> 
   visitSetExpr(expr: Expr.Set): void {
     this.resolveExpr(expr.value);
     this.resolveExpr(expr.object);
+    return null;
+  }
+
+  visitThisExpr(expr: Expr.This): void {
+    if (this.currentClass == ClassType.NONE) {
+      Logger.errorMsg(expr.keyword,
+          "Cannot use 'this' outside of a class.");
+      return null;
+    }
+
+    this.resolveLocal(expr, expr.keyword);
     return null;
   }
 

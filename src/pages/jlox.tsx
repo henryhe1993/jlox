@@ -21,14 +21,19 @@ export default function() {
   const rawInput = React.useMemo(() => {
     return (
       `
-      class Bacon {
-        eat() {
-          print "Crunch crunch crunch!";
+      class Thing {
+        getCallback() {
+          fun localFunction() {
+            print this.a;
+          }
+      
+          return localFunction;
         }
       }
-      
-      print Bacon();
-      Bacon().eat(); // Prints "Crunch crunch crunch!".
+      var thing = Thing();
+      thing.a = "aaaa";
+      var callback = thing.getCallback();
+      callback();
       `
     )
   }, []);

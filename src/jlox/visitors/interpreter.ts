@@ -55,7 +55,7 @@ export default class Interpreter implements Expr.Visitor<any>, Stmt.Visitor<void
     
     const methods: Map<string, LoxFunction> = new Map();
     for (let method of stmt.methods) {
-      const fun = new LoxFunction(method, this.environment);
+      const fun = new LoxFunction(method, this.environment, method.name.lexeme === "init");
       methods.set(method.name.lexeme, fun);
     }
 
@@ -108,7 +108,7 @@ export default class Interpreter implements Expr.Visitor<any>, Stmt.Visitor<void
   }
 
   visitFunctionStmt(stmt: Stmt.Function): void {
-    const fun = new LoxFunction(stmt, this.environment);
+    const fun = new LoxFunction(stmt, this.environment, false);
     this.environment.define(stmt.name.lexeme, fun);
     return null;
   }
@@ -269,6 +269,10 @@ export default class Interpreter implements Expr.Visitor<any>, Stmt.Visitor<void
     return value;
   }
 
+  visitThisExpr(expr: Expr.This): any {
+    return this.lookUpVariable(expr.keyword, expr);
+  }
+
   // FIXME:
   visitCommaExpr(expr: Expr.Comma) {
     this.evaluate(expr.value)
@@ -286,7 +290,8 @@ export default class Interpreter implements Expr.Visitor<any>, Stmt.Visitor<void
         expr.params, 
         expr.body
       ), 
-      this.environment
+      this.environment,
+      false
     );
   }
 

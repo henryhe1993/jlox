@@ -353,6 +353,7 @@ export default class Parser {
     if (this.match(TokenType.NUMBER, TokenType.STRING)) {
       return new Expr.Literal(this.previous().literal);
     }
+    if (this.match(TokenType.THIS)) return new Expr.This(this.previous());
     if (this.match(TokenType.IDENTIFIER)) {
       return new Expr.Variable(this.previous());
     }

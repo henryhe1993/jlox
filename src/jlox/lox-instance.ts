@@ -15,10 +15,10 @@ export default class LoxInstance {
     if (this.fields.has(name.lexeme)) {
       return this.fields.get(name.lexeme);
     }
-    let method: LoxFunction;
-    if (method = this.klass.findMethod(name.lexeme)) {
-      return method;
-    }
+
+    const method = this.klass.findMethod(name.lexeme);
+    if (method != null) return method.bind(this);
+    
     throw new RuntimeError(name, 
         "Undefined property '" + name.lexeme + "'.");
   }

@@ -70,6 +70,11 @@ export default class RPNVisitor implements Expr.Visitor<string> {
     visitSetExpr(expr: Expr.Set) {
     return '';
   }
+
+    // TODO:
+    visitThisExpr(expr: Expr.This) {
+      return '';
+    }
   
   computeValue(value: Expr.LiteralType, ...exprs: Expr.Expr[]) {
     let build = ``;
