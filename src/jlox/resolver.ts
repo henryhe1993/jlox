@@ -6,7 +6,8 @@ import Token from './token';
 
 enum FunctionType {
   NONE,
-  FUNCTION
+  FUNCTION,
+  METHOD
 }
 
 export default class Resolver implements Expr.Visitor<void>, Stmt.Visitor<void> {
@@ -27,6 +28,17 @@ export default class Resolver implements Expr.Visitor<void>, Stmt.Visitor<void> 
     return null;
   }
 
+  visitClassStmt(stmt: Stmt.Class): void {
+    this.declare(stmt.name);
+    this.define(stmt.name);
+
+    for (let method of stmt.methods) {
+    const declaration = FunctionType.METHOD;
+      this.resolveFunction(method, declaration); 
+    }
+
+    return null;
+  }
 
   visitExpressionStmt(stmt: Stmt.Expression): void {
     this.resolveExpr(stmt.expression);
@@ -114,6 +126,11 @@ export default class Resolver implements Expr.Visitor<void>, Stmt.Visitor<void> 
     return null;
   }
 
+  visitGetExpr(expr: Expr.Get): void {
+    this.resolveExpr(expr.object);
+    return null;
+  }
+
   visitGroupingExpr(expr: Expr.Grouping): void {
     this.resolveExpr(expr.expression);
     return null;
@@ -132,6 +149,13 @@ export default class Resolver implements Expr.Visitor<void>, Stmt.Visitor<void> 
     this.resolveExpr(expr.right);
     return null;
   }
+
+  visitSetExpr(expr: Expr.Set): void {
+    this.resolveExpr(expr.value);
+    this.resolveExpr(expr.object);
+    return null;
+  }
+
   // TODO:
   visitCommaExpr(expr: Expr.Comma): void {
     return null;
@@ -158,36 +182,12 @@ export default class Resolver implements Expr.Visitor<void>, Stmt.Visitor<void> 
     }
   }
 
-  private beginScope(): void {
-    this.scopes.push(new Map<string, boolean>());
-  }
-
   private resolveStmt(stmt: Stmt.Stmt): void {
     stmt.accept(this);
   }
 
   private resolveExpr(expr: Expr.Expr): void {
     expr.accept(this);
-  }
-
-  private endScope(): void {
-    this.scopes.pop();
-  }
-
-  private declare(name: Token): void {
-    if (!this.scopes.length) return;
-
-    const scope = this.scopes[this.scopes.length - 1];
-    if (scope.has(name.lexeme)) {
-      Logger.errorMsg(name,
-          "Variable with this name already declared in this scope.");
-    }
-    scope.set(name.lexeme, false);
-  }
-
-  private define(name: Token): void {
-    if (!this.scopes.length) return;
-    this.scopes[this.scopes.length - 1].set(name.lexeme, true);
   }
 
   private resolveLocal(expr: Expr.Expr, name: Token): void {
@@ -212,5 +212,29 @@ export default class Resolver implements Expr.Visitor<void>, Stmt.Visitor<void> 
     this.resolve(fun.body);
     this.endScope();
     this.currentFunction = enclosingFunction;
+  }
+
+  private beginScope(): void {
+    this.scopes.push(new Map<string, boolean>());
+  }
+
+  private endScope(): void {
+    this.scopes.pop();
+  }
+
+  private declare(name: Token): void {
+    if (!this.scopes.length) return;
+
+    const scope = this.scopes[this.scopes.length - 1];
+    if (scope.has(name.lexeme)) {
+      Logger.errorMsg(name,
+          "Variable with this name already declared in this scope.");
+    }
+    scope.set(name.lexeme, false);
+  }
+
+  private define(name: Token): void {
+    if (!this.scopes.length) return;
+    this.scopes[this.scopes.length - 1].set(name.lexeme, true);
   }
 }

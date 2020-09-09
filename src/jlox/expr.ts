@@ -8,12 +8,12 @@ export interface Visitor<R> {
   visitTernaryExpr(expr: Ternary): R;
   visitCallExpr(expr: Call): R;
   visitFunctionExpr(expr: Function): R;
-  // R visitGetExpr(Get expr);
+  visitGetExpr(expr: Get): R;
   visitGroupingExpr(expr: Grouping): R;
   visitLiteralExpr(expr: Literal): R;
   visitTagExpr(expr: Tag): R;
   visitLogicalExpr(expr: Logical) :R;
-  // R visitSetExpr(Set expr);
+  visitSetExpr(expr: Set);
   // R visitSuperExpr(Super expr);
   // R visitThisExpr(This expr);
   visitCommaExpr(expr: Comma): R;
@@ -206,5 +206,35 @@ export class Function extends Expr {
 
   accept<R> (visitor: Visitor<R>): R {
     return visitor.visitFunctionExpr(this);
+  }
+}
+
+export class Get extends Expr {
+  object: Expr;
+  name: Token;
+  constructor(object: Expr, name: Token) {
+    super();
+    this.object = object;
+    this.name = name;
+  }
+
+  accept<R>(visitor: Visitor<R>) {
+    return visitor.visitGetExpr(this);
+  }
+}
+
+export class Set extends Expr {
+  object: Expr;
+  name: Token;
+  value: Expr;
+  constructor(object: Expr, name:  Token, value: Expr) {
+    super();
+    this.object = object;
+    this.name = name;
+    this.value = value;
+  }
+
+  accept<R>(visitor: Visitor<R>) {
+    return visitor.visitSetExpr(this);
   }
 }

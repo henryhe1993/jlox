@@ -7,6 +7,8 @@ import { RuntimeError, Return } from '../error/runtime-error';
 import TagDataSource from '../tag';
 import LoxCallable from '../lox-callable';
 import LoxFunction from '../lox-function';
+import LoxClass from '../lox-class';
+import LoxInstance from '../lox-instance';
 
 enum ExitState {
   BREAK = 'BREAK'
@@ -46,6 +48,21 @@ export default class Interpreter implements Expr.Visitor<any>, Stmt.Visitor<void
   // STATEMENT
   visitBlockStmt(stmt: Stmt.Block): void | ExitState {
     return this.executeBlock(stmt.statements, new Environment(this.environment));
+  }
+
+  visitClassStmt(stmt: Stmt.Class): void {
+    this.environment.define(stmt.name.lexeme, null);
+    
+    const methods: Map<string, LoxFunction> = new Map();
+    for (let method of stmt.methods) {
+      const fun = new LoxFunction(method, this.environment);
+      methods.set(method.name.lexeme, fun);
+    }
+
+    const klass = new LoxClass(stmt.name.lexeme, methods);
+    
+    this.environment.assign(stmt.name, klass);
+    return null;
   }
 
   visitExpressionStmt(stmt: Stmt.Expression): void {
@@ -206,6 +223,16 @@ export default class Interpreter implements Expr.Visitor<any>, Stmt.Visitor<void
     return fun.call(this, args);
   }
 
+  visitGetExpr(expr: Expr.Get): any {
+    const object = this.evaluate(expr.object);
+    if (object instanceof LoxInstance) {
+      return object.get(expr.name);
+    }
+
+    throw new RuntimeError(expr.name,
+        "Only instances have properties.");
+  }
+
   visitGroupingExpr(expr: Expr.Grouping): any {
     return this.evaluate(expr.expression);
   }
@@ -228,6 +255,18 @@ export default class Interpreter implements Expr.Visitor<any>, Stmt.Visitor<void
     }
 
     return this.evaluate(expr.right);
+  }
+
+  visitSetExpr(expr: Expr.Set): any {
+    const object = this.evaluate(expr.object);
+
+    if (!(object instanceof LoxInstance)) { 
+      throw new RuntimeError(expr.name, "Only instances have fields.");
+    }
+
+    const value = this.evaluate(expr.value);
+    object.set(expr.name, value);
+    return value;
   }
 
   // FIXME:

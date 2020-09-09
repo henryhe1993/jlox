@@ -3,7 +3,7 @@ import Token from './token';
 
 export interface Visitor<R> {
   visitBlockStmt(stmt: Block): R;
-  // R visitClassStmt(Class stmt);
+  visitClassStmt(stmt: Class): R;
   visitExpressionStmt(stmt: Expression): R;
   visitFunctionStmt(stmt: Function): R;
   visitIfStmt(stmt: If): R;
@@ -142,6 +142,21 @@ export class Return extends Stmt {
   accept<R>(visitor: Visitor<R>): R {
     return visitor.visitReturnStmt(this);
   }
+}
 
-
+export class Class extends Stmt {
+  name: Token;
+  superclass: Expr.Variable;
+  methods: Function[];
+  
+  constructor(name: Token, superclass: Expr.Variable, methods: Function[]) {
+    super();
+    this.name = name;
+    this.superclass = superclass;
+    this.methods = methods;
+  }
+  
+  accept<R>(visitor: Visitor<R>) {
+    return visitor.visitClassStmt(this);
+  }
 }

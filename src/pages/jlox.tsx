@@ -21,16 +21,14 @@ export default function() {
   const rawInput = React.useMemo(() => {
     return (
       `
-      var a = "global";
-      {
-        fun showA() {
-          print a;
+      class Bacon {
+        eat() {
+          print "Crunch crunch crunch!";
         }
-
-        showA();
-        var a = "block";
-        showA();
       }
+      
+      print Bacon();
+      Bacon().eat(); // Prints "Crunch crunch crunch!".
       `
     )
   }, []);

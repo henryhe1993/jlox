@@ -63,6 +63,16 @@ export default class implements Expr.Visitor<string> {
     return '';
   }
 
+  // TODO:
+  visitGetExpr(expr: Expr.Get) {
+    return '';
+  }
+
+   // TODO:
+   visitSetExpr(expr: Expr.Set) {
+    return '';
+  }
+
   private parenthesize(name: String, ...exprs: Expr.Expr[]) {
     let builder = '';
 
