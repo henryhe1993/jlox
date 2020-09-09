@@ -40,3 +40,5 @@ export default class LoxClass extends LoxCallable {
     return this.name;
   }
 }
+// @ts-ignore
+// LoxClass.prototype.__proto__ = new LoxCallable;

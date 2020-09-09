@@ -8,7 +8,24 @@ import Scanner from '../jlox/scanner';
 import Parser from '../jlox/parser';
 import Interpreter from '../jlox/visitors/interpreter';
 import Resolver from '../jlox/resolver';
+import AceEditor from "react-ace";
 
+import "ace-builds/src-noconflict/theme-github";
+
+const rawInput = 
+`class Thing {
+  getCallback() {
+    fun localFunction() {
+      print this.a;
+    }
+
+    return localFunction;
+  }
+}
+var thing = Thing();
+thing.a = "aaaa";
+var callback = thing.getCallback();
+callback();`;
 
 const interpreter = new Interpreter();
 
@@ -18,29 +35,24 @@ export default function() {
   const inputArea = React.useRef(null as HTMLPreElement);
 
   
-  const rawInput = React.useMemo(() => {
-    return (
-      `
-      class Thing {
-        getCallback() {
-          fun localFunction() {
-            print this.a;
-          }
-      
-          return localFunction;
-        }
-      }
-      var thing = Thing();
-      thing.a = "aaaa";
-      var callback = thing.getCallback();
-      callback();
-      `
-    )
-  }, []);
+  const [codeInput, setCodeInput] = React.useState(rawInput);
+  const handleCompile = React.useCallback(() => {
+    console.log('------------compiling & running------------')
+    const scanner = new Scanner(codeInput);
+    const tokens = scanner.scanTokens();
+    console.log('tokens: ', tokens)
+    const statements = new Parser(tokens).parse();
+    console.log('statements: ', statements)
+    const resolver = new Resolver(interpreter);
+    resolver.resolve(statements);
+    console.log('------------interpreting------------')
+    interpreter.interpret(statements);
+    console.log('------------running finish------------')
+  }, [codeInput]);
 
   React.useEffect(() => {
     try {
-      const scanner = new Scanner(rawInput);
+      const scanner = new Scanner(codeInput);
       const tokens = scanner.scanTokens();
       // console.log('tokens:', tokens);
       const statements = new Parser(tokens).parse();
@@ -89,15 +101,26 @@ export default function() {
 
   return (
     <div>
-      <pre ref={inputArea}>{rawInput}</pre>
-      {error && (
+      <button style={{marginBottom: 20}} onClick={handleCompile}>
+        compile & run
+      </button>
+      <AceEditor
+        theme="github"
+        height="80vh"
+        onChange={setCodeInput}
+        name="editor"
+        value={codeInput}
+        editorProps={{ $blockScrolling: true }}
+      />,
+      
+      {/* {error && (
         <p>Error: {error}</p>
       ) || (
         <div>
           <p>SUCCESS: </p>
           <p>caluculated value: {value}</p>
         </div>
-      )}
+      )} */}
     </div>
   )
 }
