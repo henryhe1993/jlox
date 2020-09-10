@@ -14,7 +14,7 @@ export interface Visitor<R> {
   visitTagExpr(expr: Tag): R;
   visitLogicalExpr(expr: Logical) :R;
   visitSetExpr(expr: Set);
-  // R visitSuperExpr(Super expr);
+  visitSuperExpr(expr: Super): R;
   visitThisExpr(expr: This): R;
   visitCommaExpr(expr: Comma): R;
   visitVariableExpr(expr: Variable): R;
@@ -250,4 +250,19 @@ export class This extends Expr {
   accept<R>(visitor: Visitor<R>) {
     return visitor.visitThisExpr(this);
   }
+}
+
+export class Super extends Expr {
+  keyword: Token;
+  method: Token;
+  constructor(keyword: Token, method: Token) {
+    super();
+    this.keyword = keyword;
+    this.method = method;
+  }
+
+  accept<R>(visitor: Visitor<R>) {
+    return visitor.visitSuperExpr(this);
+  }
+
 }

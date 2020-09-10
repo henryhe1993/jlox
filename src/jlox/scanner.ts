@@ -26,6 +26,8 @@ export default class Scanner {
   private start: number = 0;
   private current: number = 0;
   private line: number = 1;
+  private colS: number = 1;
+  private colE: number = 1;
 
   constructor(source: string) {
     this.source = source;
@@ -34,10 +36,11 @@ export default class Scanner {
   scanTokens() {
     while (!this.isAtEnd()) {
       this.start = this.current;
+      this.colS = this.colE;
       this.scanToken();
     }
 
-    this.tokens.push(new Token(TokenType.EOF, '', null, {line: this.line, start: this.current, end: this.current}));
+    this.tokens.push(new Token(TokenType.EOF, '', null, {line: this.line, start: this.colS, end: this.colE}));
     return this.tokens;
   }
 
@@ -75,6 +78,8 @@ export default class Scanner {
 
       case '\n':
         this.line++;
+        this.colS = 1;
+        this.colE = 1;
         break;
       case '"': this.string(); break;
       case "'": this.tag(); break;
@@ -97,18 +102,19 @@ export default class Scanner {
 
   private advance() {
     this.current++;
+    this.colE++;
     return this.source.charAt(this.current - 1);
   }
 
   private addToken(type: TokenType, literal: string | number = null) {
     const text = this.source.substring(this.start, this.current);
-    this.tokens.push(new Token(type, text, literal, {line: this.line, start: this.start, end: this.current}));
+    this.tokens.push(new Token(type, text, literal, {line: this.line, start: this.colS, end: this.colE}));
   }
 
   private match(expected: string) {
     if (this.isAtEnd()) return false;
     if (this.source.charAt(this.current) != expected) return false;
-
+    this.colE++;
     this.current++;
     return true;
   }
@@ -120,7 +126,11 @@ export default class Scanner {
 
   private string() {
     while (this.peek() != '"' && !this.isAtEnd()) {
-      if (this.peek() == '\n') this.line++;
+      if (this.peek() == '\n') {
+        this.line++;
+        this.colS = 1;
+        this.colE = 1;
+      }
       this.advance();
     }
 
@@ -136,7 +146,11 @@ export default class Scanner {
 
   private tag() {
     while (this.peek() != "'" && !this.isAtEnd()) {
-      if (this.peek() == '\n') this.line++;
+      if (this.peek() == '\n') {
+        this.colS = 1;
+        this.colE = 1;
+        this.line++;
+      }
       this.advance();
     }
 

@@ -5,10 +5,12 @@ import Interpreter from './visitors/interpreter';
 
 export default class LoxClass extends LoxCallable {
   name: string;
+  superclass: LoxClass;
   private methods: Map<string, LoxFunction>;
 
-  constructor(name: string, methods: Map<string, LoxFunction>) {
+  constructor(name: string, superclass: LoxClass, methods: Map<string, LoxFunction>) {
     super();
+    this.superclass = superclass;
     this.name = name;
     this.methods = methods;
   }
@@ -25,6 +27,9 @@ export default class LoxClass extends LoxCallable {
   findMethod(name: string): LoxFunction {
     if (this.methods.has(name)) {
       return this.methods.get(name);
+    }
+    if (this.superclass != null) {
+      return this.superclass.findMethod(name);
     }
 
     return null;

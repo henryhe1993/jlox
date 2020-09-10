@@ -10,22 +10,24 @@ import Interpreter from '../jlox/visitors/interpreter';
 import Resolver from '../jlox/resolver';
 import AceEditor from "react-ace";
 
+import "ace-builds/src-noconflict/mode-markdown";
 import "ace-builds/src-noconflict/theme-github";
 
 const rawInput = 
-`class Thing {
-  getCallback() {
-    fun localFunction() {
-      print this.a;
-    }
-
-    return localFunction;
+`class Doughnut {
+  cook() {
+    print "Fry until golden brown.";
   }
 }
-var thing = Thing();
-thing.a = "aaaa";
-var callback = thing.getCallback();
-callback();`;
+
+class BostonCream < Doughnut {
+  cook() {
+    super.cook();
+    print "Pipe full of custard and coat with chocolate.";
+  }
+}
+
+BostonCream().cook();`;
 
 const interpreter = new Interpreter();
 
@@ -109,6 +111,7 @@ export default function() {
         height="80vh"
         onChange={setCodeInput}
         name="editor"
+        mode="markdown"
         value={codeInput}
         editorProps={{ $blockScrolling: true }}
       />,
