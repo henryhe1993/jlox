@@ -1,8 +1,8 @@
-import * as Expr from './expr';
-import * as Stmt from './stmt';
-import Interpreter from './visitors/interpreter';
-import Logger from './logger';
-import Token from './token';
+import * as Expr from '../expr';
+import * as Stmt from '../stmt';
+import Interpreter from './interpreter';
+import Logger from '../logger';
+import Token from '../token';
 
 enum FunctionType {
   NONE,
@@ -22,10 +22,15 @@ export default class Resolver implements Expr.Visitor<void>, Stmt.Visitor<void> 
   private scopes: Map<string, boolean>[] = [];
   private currentFunction: FunctionType = FunctionType.NONE;
   private currentClass: ClassType = ClassType.NONE;
-  // Stack<Map<String, Boolean>>
 
   constructor(interpreter: Interpreter) {
     this.interpreter = interpreter;
+  }
+
+  resolve(statements: Stmt.Stmt[]): void {
+    for (let statement of statements) {
+      this.resolveStmt(statement);
+    }
   }
 
   // STATEMENT
@@ -52,9 +57,6 @@ export default class Resolver implements Expr.Visitor<void>, Stmt.Visitor<void> 
     if (stmt.superclass != null) {
       this.currentClass = ClassType.SUBCLASS;
       this.resolveExpr(stmt.superclass);
-    }
-
-    if (stmt.superclass != null) {
       this.beginScope();
       this.scopes[this.scopes.length - 1].set("super", true);
     }
@@ -219,9 +221,10 @@ export default class Resolver implements Expr.Visitor<void>, Stmt.Visitor<void> 
     this.resolveLocal(expr, expr.keyword);
     return null;
   }
-
-  // TODO:
+  
   visitCommaExpr(expr: Expr.Comma): void {
+    this.resolveExpr(expr.value);
+    this.resolveExpr(expr.right);
     return null;
   }
 
@@ -235,15 +238,10 @@ export default class Resolver implements Expr.Visitor<void>, Stmt.Visitor<void> 
     this.resolveLocal(expr, expr.name);
     return null;
   }
-  // TODO:
+  
   visitFunctionExpr(expr: Expr.Function): void {
+    this.resolveFunction(expr, FunctionType.FUNCTION);
     return null;
-  }
-
-  resolve(statements: Stmt.Stmt[]): void {
-    for (let statement of statements) {
-      this.resolveStmt(statement);
-    }
   }
 
   private resolveStmt(stmt: Stmt.Stmt): void {
@@ -265,7 +263,7 @@ export default class Resolver implements Expr.Visitor<void>, Stmt.Visitor<void> 
     // Not found. Assume it is global.
   }
 
-  private resolveFunction(fun: Stmt.Function, type: FunctionType): void {
+  private resolveFunction(fun: Stmt.Function | Expr.Function, type: FunctionType): void {
     let enclosingFunction: FunctionType = this.currentFunction;
     this.currentFunction = type;
     this.beginScope();

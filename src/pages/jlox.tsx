@@ -7,7 +7,7 @@ import { Loc } from '../jlox/interfaces';
 import Scanner from '../jlox/scanner';
 import Parser from '../jlox/parser';
 import Interpreter from '../jlox/visitors/interpreter';
-import Resolver from '../jlox/resolver';
+import Resolver from '../jlox/visitors/resolver';
 import AceEditor from "react-ace";
 
 import "ace-builds/src-noconflict/mode-markdown";
@@ -30,7 +30,6 @@ class BostonCream < Doughnut {
 BostonCream().cook();`;
 
 const interpreter = new Interpreter();
-
 export default function() {
   const [error, setError] = React.useState('');
   const [value, setValue] = React.useState('');
@@ -39,6 +38,7 @@ export default function() {
   
   const [codeInput, setCodeInput] = React.useState(rawInput);
   const handleCompile = React.useCallback(() => {
+    const interpreter = new Interpreter();
     console.log('------------compiling & running------------')
     const scanner = new Scanner(codeInput);
     const tokens = scanner.scanTokens();
@@ -114,8 +114,7 @@ export default function() {
         mode="markdown"
         value={codeInput}
         editorProps={{ $blockScrolling: true }}
-      />,
-      
+      />
       {/* {error && (
         <p>Error: {error}</p>
       ) || (

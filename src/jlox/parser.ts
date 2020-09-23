@@ -128,7 +128,7 @@ export default class Parser {
   }
 
   private printStatement(): Stmt.Stmt {
-    const value = this.comma();
+    const value = this.expression();
     this.consume(TokenType.SEMICOLON, "Expect ';' after value.");
     return new Stmt.Print(value);
   }
@@ -169,7 +169,7 @@ export default class Parser {
   }
 
   private expressionStatement(): Stmt.Stmt {
-    const expr = this.comma();
+    const expr = this.expression();
     this.consume(TokenType.SEMICOLON, "Expect ';' after expression.");
     return new Stmt.Expression(expr);
   }
@@ -194,29 +194,21 @@ export default class Parser {
     return new Stmt.Function(name, parameters, body);
   }
 
-  private comma(): Expr.Expr {
-    let expr = this.expression();
-    while (this.match(TokenType.COMMA)) 
-      expr = new Expr.Comma(expr, this.comma());
 
-    // right-associative ternary
-    while (this.match(TokenType.QUESTION_MARK)) {
-      const leftExpr = this.expression();
-      if (!this.match(TokenType.COLON)) {
-        throw this.error(this.peek(), 'Expect a colon.');
-      }
-      const rightExpr = this.expression();
-      expr = new Expr.Ternary(expr, leftExpr, rightExpr);
+  private expression(): Expr.Expr  {
+    return this.comma();
+  }
+
+  private comma(): Expr.Expr {
+    let expr = this.assignment();
+    while (this.match(TokenType.COMMA)) {
+      expr = new Expr.Comma(expr, this.assignment());
     }
     return expr;
   }
 
-  private expression(): Expr.Expr  {
-    return this.assignment();
-  }
-
   private assignment(): Expr.Expr {
-    const expr = this.or();
+    const expr = this.ternary();
 
     if (this.match(TokenType.EQUAL)) {
       const equals = this.previous();
@@ -231,6 +223,21 @@ export default class Parser {
       }
 
       this.error(equals, "Invalid assignment target."); 
+    }
+
+    return expr;
+  }
+
+  private ternary(): Expr.Expr {
+    let expr = this.or();
+
+    if (this.match(TokenType.QUESTION_MARK)) {
+      const leftExpr = this.ternary();
+      if (!this.match(TokenType.COLON)) {
+        throw this.error(this.peek(), 'Expect a colon.');
+      }
+      const rightExpr = this.ternary();
+      expr = new Expr.Ternary(expr, leftExpr, rightExpr);
     }
 
     return expr;
